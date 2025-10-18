@@ -367,3 +367,4 @@ FodyWeavers.xsd
 /TestConsole
 /TestApi
 /Server/Properties/ServiceDependencies/my-sqlite - Zip Deploy
+/Server/Properties/ServiceDependencies/litegate - Zip Deploy/profile.arm.json
