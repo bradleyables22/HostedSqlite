@@ -11,9 +11,15 @@ namespace Server.Services
 		}
 		protected override async Task ExecuteAsync(CancellationToken stoppingToken)
 		{
+			var enabled = IsRotationEnabled();
+			if (!enabled)
+				return;
+
+			var interval = GetIntervalHours();
+
 			while (!stoppingToken.IsCancellationRequested) 
 			{
-				await Task.Delay(TimeSpan.FromDays(1));
+				await Task.Delay(interval, stoppingToken);
 
 				try
 				{
@@ -24,6 +30,22 @@ namespace Server.Services
 					continue;
 				}
 			}
+		}
+		private static bool IsRotationEnabled()
+		{
+			var value = Environment.GetEnvironmentVariable("SECRET_ROTATE_ENABLED");
+			return string.Equals(value, "true", StringComparison.OrdinalIgnoreCase)
+				|| string.Equals(value, "1", StringComparison.OrdinalIgnoreCase)
+				|| string.Equals(value, "yes", StringComparison.OrdinalIgnoreCase);
+		}
+
+		private static TimeSpan GetIntervalHours()
+		{
+			var env = Environment.GetEnvironmentVariable("SECRET_ROTATE_INTERVAL_HOURS");
+			if (int.TryParse(env, out var hours) && hours > 0)
+				return TimeSpan.FromHours(hours);
+
+			return TimeSpan.FromHours(24);
 		}
 	}
 }

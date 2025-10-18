@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 using Server.Authentication;
@@ -35,6 +37,10 @@ builder.Services.AddSingleton<Channel<SqliteChangeEvent>>(_ =>
     return Channel.CreateBounded<SqliteChangeEvent>(options);
 });
 
+//dummy health check
+builder.Services.AddHealthChecks()
+	.AddCheck("always_good", () =>
+		HealthCheckResult.Healthy("Everything is good!"));
 
 builder.Services.AddSingleton<UserDatabase>();
 builder.Services.AddSingleton<ServerSettings>();
@@ -139,5 +145,27 @@ app.MapUserRoleManagementEndpoints();
 app.MapDatabaseManagementEndpoints();
 app.MapDatabaseInteractionEndpoints();
 app.MapWebHookEndpoints();
+
+//dummy health check endpoint
+app.MapHealthChecks("/health", new HealthCheckOptions
+{
+	// Optional: Customize JSON output
+	ResponseWriter = async (context, report) =>
+	{
+		context.Response.ContentType = "application/json";
+		var result = new
+		{
+			status = report.Status.ToString(),
+			timestamp = DateTime.UtcNow,
+			checks = report.Entries.Select(e => new
+			{
+				name = e.Key,
+				status = e.Value.Status.ToString(),
+				description = e.Value.Description
+			})
+		};
+		await context.Response.WriteAsJsonAsync(result);
+	}
+}).ExcludeFromDescription().ExcludeFromApiReference();
 
 app.Run();
