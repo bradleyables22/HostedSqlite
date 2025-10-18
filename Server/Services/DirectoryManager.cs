@@ -6,10 +6,12 @@ public static class DirectoryManager
 {
     private static readonly Regex SafeName = new(@"^[A-Za-z][A-Za-z0-9_.-]*$", RegexOptions.Compiled);
 
-    public static string GetPersistentBasePath()
-        => Environment.GetEnvironmentVariable("HOME") ?? AppContext.BaseDirectory;
+	public static string GetPersistentBasePath()
+	 => Environment.GetEnvironmentVariable("PERSISTENT_BASE")
+		?? Environment.GetEnvironmentVariable("HOME")
+		?? AppContext.BaseDirectory;
 
-    public static string GetRoot() => Path.Combine(GetPersistentBasePath(), "databases");
+	public static string GetRoot() => Path.Combine(GetPersistentBasePath(), "databases");
 
     public static string GetDatabaseFolder(string dbName)
     {
